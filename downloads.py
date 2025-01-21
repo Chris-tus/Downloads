@@ -17,8 +17,8 @@ bucket = gcs.Client().bucket("diamond-dotgenerator.firebasestorage.app")
 
 # Parse query parameters
 query_params = st.query_params
-session_id = query_params.get("session_id", [None])[0]
-payment_status = query_params.get("paid", [None])[0]
+session_id = query_params.get("session_id", [None])[0]  # Stripe's session_id from redirect URL
+payment_status = query_params.get("paid", [None])[0]  # Paid status from redirect URL
 
 if session_id and payment_status == "true":
     try:
@@ -26,14 +26,14 @@ if session_id and payment_status == "true":
         st.write("Session ID:", session_id)
         st.write("Payment Status:", payment_status)
 
-        # Retrieve session data from Firebase to validate and get the associated ZIP file
+        # Validate session data from Firebase
         stripe_session_key = f"sessions/{session_id}/stripe_session.json"
         session_blob = bucket.blob(stripe_session_key)
 
         if session_blob.exists():
-            # Load the session data
-            session_data = session_blob.download_as_string()
-            client_reference_id = json.loads(session_data).get("client_reference_id")
+            # Load the session data from Firebase
+            session_data = json.loads(session_blob.download_as_string())
+            client_reference_id = session_data.get("client_reference_id")
 
             if client_reference_id:
                 # Use client_reference_id to locate the ZIP file
@@ -41,7 +41,7 @@ if session_id and payment_status == "true":
                 zip_blob = bucket.blob(zip_file_key)
 
                 if zip_blob.exists():
-                    # Offer the file for download
+                    # Offer the ZIP file for download
                     st.download_button(
                         label="Download Your File",
                         data=zip_blob.download_as_bytes(),
@@ -51,9 +51,9 @@ if session_id and payment_status == "true":
                 else:
                     st.error(f"Error: ZIP file not found for Client Reference ID: {client_reference_id}")
             else:
-                st.error("Client Reference ID is missing from the session data.")
+                st.error("Error: Client Reference ID is missing from the session data.")
         else:
-            st.error("Session not found in Firebase. Please ensure the payment was completed successfully.")
+            st.error("Error: Session not found in Firebase. Please ensure the payment was completed successfully.")
     except Exception as e:
         st.error(f"An error occurred while accessing Firebase: {str(e)}")
 else:
