@@ -22,14 +22,14 @@ st.write(f"Bucket reference obtained: {bucket.name}")
 
 # Parse query parameters
 st.write("Parsing query parameters...")
-query_params = st.query_params
+query_params = st.query_params  # Correctly parse query parameters as a dictionary
 st.write("Query parameters object:", query_params)
 
-# Extract session_id and payment_status
-session_id = query_params.get("session_id", [None])[0]  # Extract full session_id
-payment_status = query_params.get("paid", [None])[0]  # Extract full paid status
+# Extract session_id and payment_status correctly
+session_id = query_params.get("session_id", [None])[0] if "session_id" in query_params else None
+payment_status = query_params.get("paid", [None])[0] if "paid" in query_params else None
 
-# Debugging query parameters
+# Debugging parsed query parameters
 st.write("Parsed query parameters:")
 st.write(f"Session ID: {session_id}")
 st.write(f"Payment Status: {payment_status}")
