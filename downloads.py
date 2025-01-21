@@ -1,9 +1,14 @@
 import streamlit as st
-from google.cloud import storage
+import firebase_admin
+from firebase_admin import credentials, storage
 
-# Initialize Firebase Storage
-bucket_name = st.secrets["firebase_credentials"]["project_id"] + ".appspot.com"
-bucket = storage.Client().bucket(bucket_name)
+# Initialize Firebase Admin SDK using credentials from Streamlit secrets
+if not firebase_admin._apps:
+    firebase_creds = dict(st.secrets["firebase_credentials"])  # Convert AttrDict to a regular dictionary
+    cred = credentials.Certificate(firebase_creds)
+    firebase_admin.initialize_app(cred, {
+        'storageBucket': 'diamond-dotgenerator.firebasestorage.app'
+    })
 
 # Parse query parameters
 query_params = st.query_params
@@ -16,9 +21,13 @@ if session_id and payment_status == "true":
         st.write("Session ID:", session_id)
         st.write("Paid:", payment_status)
 
+        # Reference the Firebase storage bucket
+        bucket = storage.bucket()
+
         # Use the session_id to retrieve the ZIP file from Firebase
         zip_file_key = f"zips/{session_id}.zip"
         zip_blob = bucket.blob(zip_file_key)
+
         if zip_blob.exists():
             # Offer the file for download
             st.download_button(
@@ -28,7 +37,7 @@ if session_id and payment_status == "true":
                 mime="application/zip",
             )
         else:
-            st.error("Error: ZIP file not found.")
+            st.error(f"Error: ZIP file not found for Session ID: {session_id}")
     except Exception as e:
         st.error(f"Error accessing Firebase: {str(e)}")
 else:
