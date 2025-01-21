@@ -2,6 +2,7 @@ import streamlit as st
 import firebase_admin
 from firebase_admin import credentials, storage
 import json
+from urllib.parse import urlparse, parse_qs
 
 # Firebase Admin Initialization
 st.write("Initializing Firebase Admin...")
@@ -20,19 +21,21 @@ else:
 bucket = storage.bucket()
 st.write(f"Bucket reference obtained: {bucket.name}")
 
-# Parse query parameters
+# Parse query parameters using urllib.parse
 st.write("Parsing query parameters...")
-query_params = st.query_params  # Correctly parse query parameters as a dictionary
+parsed_url = st.experimental_get_query_params()  # Use Streamlit to get the full query string
+query_string = urlparse(f"?{parsed_url}").query  # Turn the params dict into a query string
+query_params = parse_qs(query_string)  # Parse the query string into a dictionary
+
+# Extract session_id and payment_status
+session_id = query_params.get("session_id", [None])[0]  # Retrieve session_id or set to None
+payment_status = query_params.get("paid", [None])[0]  # Retrieve paid status or set to None
+
+# Debugging the parsed parameters
 st.write("Query parameters object:", query_params)
-
-# Extract session_id and payment_status correctly
-session_id = query_params.get("session_id", [None])[0] if "session_id" in query_params else None
-payment_status = query_params.get("paid", [None])[0] if "paid" in query_params else None
-
-# Debugging parsed query parameters
 st.write("Parsed query parameters:")
-st.write(f"Session ID: {session_id}")
-st.write(f"Payment Status: {payment_status}")
+st.write("Session ID:", session_id)
+st.write("Payment Status:", payment_status)
 
 # Ensure both parameters are not None and payment_status is "true"
 if session_id and payment_status == "true":
