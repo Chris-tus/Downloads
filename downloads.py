@@ -1,12 +1,14 @@
 import streamlit as st
-from firebase_admin import credentials, initialize_app, storage
+import firebase_admin
+from firebase_admin import credentials, storage
 from google.cloud import storage as gcs
+import json
 
 # Initialize Firebase Admin SDK using credentials from Streamlit secrets
-if not initialize_app._apps:
+if not firebase_admin._apps:
     firebase_creds = dict(st.secrets["firebase_credentials"])  # Convert AttrDict to a regular dictionary
     cred = credentials.Certificate(firebase_creds)
-    initialize_app(cred, {
+    firebase_admin.initialize_app(cred, {
         'storageBucket': 'diamond-dotgenerator.firebasestorage.app'
     })
 
