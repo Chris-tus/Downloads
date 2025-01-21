@@ -34,9 +34,10 @@ if session_id and payment_status == "true":
             session_data = json.loads(session_blob.download_as_string())
             client_reference_id = session_data.get("client_reference_id")
 
-            if client_reference_id:
-                # Use client_reference_id to locate the ZIP file
-                zip_file_key = f"zips/{client_reference_id}.zip"
+            # Validate that the client_reference_id matches the session_id
+            if client_reference_id == session_id:
+                # Use the session_id (client_reference_id) to locate the ZIP file
+                zip_file_key = f"zips/{session_id}.zip"
                 zip_blob = bucket.blob(zip_file_key)
 
                 if zip_blob.exists():
@@ -48,11 +49,11 @@ if session_id and payment_status == "true":
                         mime="application/zip",
                     )
                 else:
-                    st.error(f"Error: ZIP file not found for Client Reference ID: {client_reference_id}")
+                    st.error(f"Error: ZIP file not found for Session ID: {session_id}")
             else:
-                st.error("Client Reference ID is missing from the session data.")
+                st.error("Session ID mismatch. Unable to validate the payment.")
         else:
-            st.error("Session not found in Firebase. Please ensure the payment was completed successfully.")
+            st.error("Session data not found in Firebase. Please ensure the payment was completed successfully.")
     except Exception as e:
         st.error(f"An error occurred while accessing Firebase: {str(e)}")
 else:
