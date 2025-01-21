@@ -3,13 +3,17 @@ import firebase_admin
 from firebase_admin import credentials, storage
 import json
 
-# Initialize Firebase Admin SDK using credentials from Streamlit secrets
+# Firebase Admin Initialization
 if not firebase_admin._apps:
-    firebase_creds = dict(st.secrets["firebase_credentials"])  # Convert AttrDict to a regular dictionary
+    firebase_creds = dict(st.secrets["firebase_credentials"])
     cred = credentials.Certificate(firebase_creds)
     firebase_admin.initialize_app(cred, {
-        'storageBucket': 'diamond-dotgenerator.firebasestorage.app'
+        'storageBucket': 'diamond-dotgenerator.firebasestorage.app', 
+        'projectId': firebase_creds.get('project_id')  # Ensure project_id is included
     })
+
+# Google Cloud Storage Bucket Reference
+bucket = storage.bucket()
 
 # Reference Firebase storage bucket
 bucket = storage.bucket()  # Uses the default bucket from Firebase Admin initialization
