@@ -1,7 +1,6 @@
 import streamlit as st
 import firebase_admin
 from firebase_admin import credentials, storage
-from google.cloud import storage as gcs
 import json
 
 # Initialize Firebase Admin SDK using credentials from Streamlit secrets
@@ -13,7 +12,7 @@ if not firebase_admin._apps:
     })
 
 # Reference Firebase storage bucket
-bucket = gcs.Client().bucket("diamond-dotgenerator.firebasestorage.app")
+bucket = storage.bucket()  # Uses the default bucket from Firebase Admin initialization
 
 # Parse query parameters
 query_params = st.query_params
@@ -26,12 +25,12 @@ if session_id and payment_status == "true":
         st.write("Session ID:", session_id)
         st.write("Payment Status:", payment_status)
 
-        # Validate session data from Firebase
+        # Retrieve session data from Firebase to validate and get the associated ZIP file
         stripe_session_key = f"sessions/{session_id}/stripe_session.json"
         session_blob = bucket.blob(stripe_session_key)
 
         if session_blob.exists():
-            # Load the session data from Firebase
+            # Load the session data
             session_data = json.loads(session_blob.download_as_string())
             client_reference_id = session_data.get("client_reference_id")
 
@@ -41,7 +40,7 @@ if session_id and payment_status == "true":
                 zip_blob = bucket.blob(zip_file_key)
 
                 if zip_blob.exists():
-                    # Offer the ZIP file for download
+                    # Offer the file for download
                     st.download_button(
                         label="Download Your File",
                         data=zip_blob.download_as_bytes(),
@@ -51,9 +50,9 @@ if session_id and payment_status == "true":
                 else:
                     st.error(f"Error: ZIP file not found for Client Reference ID: {client_reference_id}")
             else:
-                st.error("Error: Client Reference ID is missing from the session data.")
+                st.error("Client Reference ID is missing from the session data.")
         else:
-            st.error("Error: Session not found in Firebase. Please ensure the payment was completed successfully.")
+            st.error("Session not found in Firebase. Please ensure the payment was completed successfully.")
     except Exception as e:
         st.error(f"An error occurred while accessing Firebase: {str(e)}")
 else:
