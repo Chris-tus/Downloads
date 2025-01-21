@@ -3,10 +3,10 @@ import streamlit as st
 from google.cloud import storage
 
 # Stripe API key from Streamlit secrets
-stripe.api_key = st.secrets["stripe_secret_key"]
+stripe.api_key = st.secrets["stripe_credentials"]["stripe_secret_key"]
 
 # Initialize Firebase Storage
-bucket_name = st.secrets["firebase_bucket_url"]
+bucket_name = st.secrets["firebase_credentials"]["project_id"] + ".appspot.com"
 bucket = storage.Client().bucket(bucket_name)
 
 # Parse query parameters
